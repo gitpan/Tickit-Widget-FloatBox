@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Test::More;
+use Test::Identity;
 
 use Tickit::Test;
 
@@ -34,6 +35,8 @@ $float = $widget->add_float(
 flush_tickit;
 
 ok( defined $float, '$float defined' );
+
+identical( $float->child->parent, $widget, '$float->child->parent' );
 
 is_display( [ [TEXT("Hello, world!"), TEXT("C" x 67)],
               ( [TEXT("C" x 80)] ) x 24 ],

@@ -9,7 +9,7 @@ use strict;
 use warnings;
 use base qw( Tickit::ContainerWidget );
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Carp;
 
@@ -113,13 +113,11 @@ sub set_base_child
    my ( $new ) = @_;
 
    if( my $old = $self->{base_child} ) {
-      my $oldwin = $old->window;
-
-      $old->set_window( undef );
-      $oldwin->close if $oldwin;
+      $self->remove( $old );
    }
 
    $self->{base_child} = $new;
+   $self->add( $new );
 
    if( my $win = $self->window ) {
       $new->set_window( $win->make_sub( 0, 0, $win->lines, $win->cols ) );
@@ -161,7 +159,9 @@ sub _reshape_float
    }
    else {
       # TODO: Ordering?
+      # TODO: I want a ->make_hidden_float
       $child->set_window( $win->make_float( @geom ) );
+      $child->window->hide if $float->{hidden};
    }
 }
 
@@ -191,6 +191,11 @@ The child widget
 The initial geometry of the floating area. These follow the same behaviour as
 the C<move> method on the Float object.
 
+=item hidden => BOOL
+
+Optional. If true, the float starts off hidden initally, and must be shown by
+the C<show> method before it becomes visible.
+
 =back
 
 =cut
@@ -204,6 +209,8 @@ sub add_float
       $self, delete $args{child}, %args
    );
    push @{ $self->{floats} }, $float;
+
+   $self->add( $float->child );
 
    if( my $win = $self->window ) {
       $self->_reshape_float( $float, $win );
@@ -223,12 +230,7 @@ sub _remove_float
 
    splice @{ $self->{floats} }, $idx, 1, ();
 
-   if( my $childwin = $float->child->window ) {
-      $childwin->expose;
-      $childwin->close;
-   }
-
-   $float->child->set_window( undef );
+   $self->remove( $float->child );
 }
 
 =head1 FLOATS
@@ -246,14 +248,15 @@ use Carp;
 sub new
 {
    my $class = shift;
-   my ( $fb, $child, %geom ) = @_;
+   my ( $fb, $child, %args ) = @_;
 
    my $self = bless {
-      fb    => $fb,
-      child => $child,
+      fb     => $fb,
+      child  => $child,
+      hidden => delete $args{hidden} || 0,
    }, $class;
 
-   $self->move( %geom );
+   $self->move( %args );
 
    return $self;
 }
@@ -350,13 +353,38 @@ sub remove
    $self->{fb}->_remove_float( $self );
 }
 
+=head2 $float->hide
+
+Hide the float by hiding the window of its child widget.
+
+=cut
+
+sub hide
+{
+   my $self = shift;
+   $self->{hidden} = 1;
+
+   $self->child->window->hide if $self->child->window;
+}
+
+=head2 $float->show
+
+Show the float by showing the window of its child widget. Undoes the effect
+of C<hide>.
+
+=cut
+
+sub show
+{
+   my $self = shift;
+   $self->{hidden} = 0;
+
+   $self->child->window->show if $self->child->window;
+}
+
 =head1 TODO
 
 =over 4
-
-=item *
-
-Allow floats to be hidden and shown again.
 
 =item *
 

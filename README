@@ -38,6 +38,10 @@ ACCESSORS
             The initial geometry of the floating area. These follow the same
             behaviour as the `move' method on the Float object.
 
+    hidden => BOOL
+            Optional. If true, the float starts off hidden initally, and
+            must be shown by the `show' method before it becomes visible.
+
 FLOATS
     The following objects represent a floating region as returned by the
     `add_float' method.
@@ -74,9 +78,14 @@ FLOATS
   $float->remove
     Removes the float from the FloatBox.
 
-TODO
-    *   Allow floats to be hidden and shown again.
+  $float->hide
+    Hide the float by hiding the window of its child widget.
 
+  $float->show
+    Show the float by showing the window of its child widget. Undoes the
+    effect of `hide'.
+
+TODO
     *   Support adjusting stacking order of floats.
 
 AUTHOR

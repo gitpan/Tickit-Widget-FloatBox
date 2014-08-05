@@ -23,6 +23,7 @@ ok( defined $widget, 'defined $widget' );
 
 is( scalar $widget->children, 1, 'scalar $widget->children' );
 identical( ( $widget->children )[0], $widget->base_child, '$widget->children[0]' );
+identical( ( $widget->children )[0]->parent, $widget, '$widget->children[0]->parent' );
 
 $child_lines = 3; $child_cols = 10;
 
